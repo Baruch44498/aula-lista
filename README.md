@@ -1,10 +1,32 @@
 # Aula Lista
 
-Agenda académica en Flutter para la sustentación **Diseño de interfaz utilizando widgets**. Autor: Baruch Isai Medina Anticona.
+Agenda académica de Baruch Isai Medina Anticona para sustentar **Diseño de interfaz utilizando widgets**. Aplicación Flutter con MVVM compartido entre Android y web.
 
-## Ejecutar en Windows
+## Pantallas
 
-Requiere Flutter 3.29 o posterior en el PATH. Para la demo web, instala Google Chrome. Abre una terminal en esta carpeta (la que contiene `pubspec.yaml`).
+- **Inicio** presenta el progreso general, la meta de estudio y las próximas tareas.
+- **Tareas** permite registrar actividades, elegir un curso, marcar avances y filtrar.
+- **Ajustes** permite cambiar entre tema claro y oscuro y elegir una meta de 1 a 10 tareas.
+
+## Arquitectura
+
+| Capa | Ubicación | Responsabilidad |
+| --- | --- | --- |
+| Model | `lib/models/` y `lib/repositories/` | Representación y fuente compartida de tareas y preferencias |
+| ViewModel | `lib/viewmodels/` | Estado de cada pantalla, navegación, formulario y presentación de los datos |
+| View | `lib/views/` | Widgets, estilos, adaptación visual y eventos |
+
+Android inicia Flutter mediante `MainActivity`. La aplicación nativa y Chrome utilizan `lib/main.dart` y las mismas capas MVVM de `lib/`.
+
+La navegación se adapta entre barra inferior y barra lateral. Cada pantalla observa su ViewModel con `ListenableBuilder`. Los repositorios compartidos mantienen sincronizados los datos al navegar.
+
+## Requisitos
+
+Flutter 3.47 o posterior y Dart 3.13 o posterior. Verificado con Flutter 3.50.0 y Dart 3.14.0. Los componentes Material 3 utilizan el paquete oficial `material_ui`.
+
+## Ejecutar
+
+Abrir una terminal en la carpeta que contiene `pubspec.yaml`.
 
 ```powershell
 flutter doctor
@@ -12,26 +34,26 @@ flutter pub get
 flutter run -d chrome
 ```
 
-Para Android, inicia un emulador en Android Studio o conecta un dispositivo con depuración USB. Ejecuta `flutter devices` y luego `flutter run -d ID_DEL_DISPOSITIVO`. La compilación Android requiere el SDK de Android y el JDK configurados mediante `flutter doctor`.
+Para Android, configurar el SDK, aceptar las licencias e iniciar un emulador o conectar un teléfono con depuración USB.
 
-## Demo de un minuto
+```powershell
+flutter doctor --android-licenses
+flutter devices
+flutter run -d ID_DEL_DISPOSITIVO
+```
 
-1. La agenda empieza con tres tareas de ejemplo, una completada (33 %).
-2. En **Pendientes**, marca «Preparar la demo de Flutter». Ahora hay dos de tres completadas (67 %).
-3. En **Completadas**, verifica que la tarea aparece. Abre **Nueva tarea**, pulsa **Guardar** para ver la validación, escribe «Ensayar la exposición» y guarda. La app vuelve a **Todas** y muestra dos de cuatro completadas (50 %).
-4. Reduce el ancho de la ventana para observar cómo la tarjeta de progreso y la lista se apilan.
+Sustituir `ID_DEL_DISPOSITIVO` por el identificador mostrado en la lista.
 
-## Arquitectura y alcance
-
-- **Model** — `lib/models/study_task.dart` define el identificador, el nombre, el curso y el estado de cada tarea.
-- **ViewModel** — `lib/viewmodels/study_view_model.dart` valida altas, cambia estados, filtra y calcula el progreso. Notifica mediante `ChangeNotifier`.
-- **View** — `lib/views/` presenta widgets y transmite eventos. `ListenableBuilder` reconstruye el contenido al recibir una notificación. `LayoutBuilder` cambia a dos columnas desde 840 px lógicos.
-
-Datos de demostración en memoria. La app restaura las tareas de ejemplo al reiniciar.
-
-## Verificación
+## Verificar
 
 ```powershell
 flutter analyze
 flutter test
+flutter build web
 ```
+
+El análisis estático finalizó sin incidencias, las siete pruebas pasaron y la versión web compiló. La ejecución Android en un dispositivo queda pendiente.
+
+Las tareas y preferencias se conservan durante la sesión. Al reiniciar se restauran los ejemplos, el tema claro y la meta inicial.
+
+La documentación completa de la arquitectura, los flujos, los widgets y la demostración se encuentra en [Aula_Lista_Proyecto.md](Aula_Lista_Proyecto.md).

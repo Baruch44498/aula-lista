@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
+
 import '../models/study_task.dart';
+import '../repositories/study_repository.dart';
 
 enum TaskFilter {
   all('Todas'),
@@ -11,24 +13,25 @@ enum TaskFilter {
 }
 
 class StudyViewModel extends ChangeNotifier {
-  StudyViewModel({Iterable<StudyTask> initial = const []})
-    : _tasks = List.of(initial) {
-    for (final task in _tasks) {
-      if (task.id >= _nextId) _nextId = task.id + 1;
-    }
+  StudyViewModel({
+    Iterable<StudyTask> initial = const [],
+    StudyRepository? repository,
+  }) : _repository = repository ?? StudyRepository(initial: initial),
+       _ownsRepository = repository == null {
+    _repository.addListener(notifyListeners);
   }
 
-  final List<StudyTask> _tasks;
-  int _nextId = 1;
+  final StudyRepository _repository;
+  final bool _ownsRepository;
   TaskFilter _filter = TaskFilter.all;
 
   TaskFilter get filter => _filter;
-  int get total => _tasks.length;
-  int get completed => _tasks.where((task) => task.done).length;
+  int get total => _repository.tasks.length;
+  int get completed => _repository.tasks.where((task) => task.done).length;
   double get progress => total == 0 ? 0 : completed / total;
 
   List<StudyTask> get visibleTasks => List.unmodifiable(
-    _tasks.where(
+    _repository.tasks.where(
       (task) => switch (_filter) {
         TaskFilter.all => true,
         TaskFilter.pending => !task.done,
@@ -44,22 +47,20 @@ class StudyViewModel extends ChangeNotifier {
   }
 
   bool addTask(String title, Subject subject) {
-    final cleanTitle = title.trim();
-    if (cleanTitle.isEmpty || cleanTitle.length > 70) return false;
-    _tasks.insert(
-      0,
-      StudyTask(id: _nextId++, title: cleanTitle, subject: subject),
-    );
+    // Select the filter before notifying so every observer sees the final state.
+    final oldFilter = _filter;
     _filter = TaskFilter.all;
-    notifyListeners();
-    return true;
+    final added = _repository.addTask(title, subject);
+    if (!added) _filter = oldFilter;
+    return added;
   }
 
-  void toggleTask(int id) {
-    final index = _tasks.indexWhere((task) => task.id == id);
-    if (index == -1) return;
-    final task = _tasks[index];
-    _tasks[index] = task.withDone(!task.done);
-    notifyListeners();
+  void toggleTask(int id) => _repository.toggleTask(id);
+
+  @override
+  void dispose() {
+    _repository.removeListener(notifyListeners);
+    if (_ownsRepository) _repository.dispose();
+    super.dispose();
   }
 }

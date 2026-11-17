@@ -1,7 +1,7 @@
 import 'package:aula_lista/main.dart';
 import 'package:aula_lista/models/study_task.dart';
 import 'package:aula_lista/viewmodels/study_view_model.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -25,9 +25,12 @@ void main() {
 
   testWidgets('marcar una tarea actualiza filtro y porcentaje', (tester) async {
     await tester.pumpWidget(const AulaListaApp());
+    await tester.tap(find.text('Tareas'));
+    await tester.pumpAndSettle();
     expect(find.text('33%'), findsOneWidget);
     await tester.tap(find.text('Pendientes'));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Preparar la demo de Flutter'));
     await tester.tap(find.text('Preparar la demo de Flutter'));
     await tester.pumpAndSettle();
     expect(find.text('67%'), findsOneWidget);
@@ -39,6 +42,8 @@ void main() {
 
   testWidgets('el diálogo muestra el error y permite guardar', (tester) async {
     await tester.pumpWidget(const AulaListaApp());
+    await tester.tap(find.text('Tareas'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Nueva tarea'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar'));
@@ -60,6 +65,8 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(360, 820));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const AulaListaApp());
+    await tester.tap(find.text('Tareas'));
+    await tester.pumpAndSettle();
     final narrowSummary = tester.getTopLeft(find.text('Progreso de estudio'));
     final narrowTasks = tester.getTopLeft(find.text('Mis tareas'));
     expect(narrowTasks.dy, greaterThan(narrowSummary.dy + 100));
