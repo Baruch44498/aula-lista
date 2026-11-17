@@ -1,0 +1,10 @@
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - web/**
+linter:
+  rules:
+    - avoid_print
+    - prefer_const_constructors
+    - use_key_in_widget_constructors
