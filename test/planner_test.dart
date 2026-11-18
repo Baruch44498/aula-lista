@@ -59,6 +59,56 @@ void main() {
     expect(find.text('25%'), findsOneWidget);
   });
 
+  testWidgets('crea un curso desde el formulario y lo reutiliza', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(390, 844));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const AulaListaApp());
+    await tester.tap(find.text('Tareas'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    final taskName = find.widgetWithText(TextField, 'Nombre de la tarea');
+    await tester.enterText(taskName, 'Diseñar tablas');
+    await tester.tap(find.text('Agregar curso'));
+    await tester.pumpAndSettle();
+    final courseName = find.widgetWithText(TextField, 'Nombre del curso');
+    await tester.tap(find.text('Crear curso'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ingresa un nombre de 1 a 40 caracteres.'), findsOneWidget);
+    await tester.enterText(courseName, '  REDES  ');
+    await tester.tap(find.text('Crear curso'));
+    await tester.pumpAndSettle();
+    expect(find.text('Ya existe un curso con ese nombre.'), findsOneWidget);
+    await tester.enterText(courseName, '  Base de datos  ');
+    await tester.tap(find.text('Crear curso'));
+    await tester.pumpAndSettle();
+    final courseDropdown = find.byType(DropdownButtonFormField<Subject>);
+    expect(
+      tester.widget<DropdownButtonFormField<Subject>>(courseDropdown).initialValue,
+      const Subject('Base de datos'),
+    );
+    await tester.tap(find.text('Guardar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Diseñar tablas'), findsOneWidget);
+    expect(find.text('Base de datos'), findsOneWidget);
+
+    await tester.tap(find.text('Nueva tarea'));
+    await tester.pumpAndSettle();
+    final dropdown = find.descendant(
+      of: courseDropdown,
+      matching: find.byType(DropdownButton<Subject>),
+    );
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Base de datos').last);
+    await tester.pumpAndSettle();
+    expect(
+      tester.widget<DropdownButtonFormField<Subject>>(courseDropdown).initialValue,
+      const Subject('Base de datos'),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('la tarjeta se apila a 360 y comparte la fila a 1024', (
     tester,
   ) async {

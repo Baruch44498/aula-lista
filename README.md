@@ -5,7 +5,7 @@ Agenda académica de Baruch Isai Medina Anticona para sustentar **Diseño de int
 ## Pantallas
 
 - **Inicio** presenta el progreso general, la meta de estudio y las próximas tareas.
-- **Tareas** permite registrar actividades, elegir un curso, marcar avances y filtrar.
+- **Tareas** permite registrar actividades, elegir o crear un curso, marcar avances y filtrar.
 - **Ajustes** permite cambiar entre tema claro y oscuro y elegir una meta de 1 a 10 tareas.
 
 ## Arquitectura
@@ -52,8 +52,8 @@ flutter test
 flutter build web
 ```
 
-El análisis estático finalizó sin incidencias, las siete pruebas pasaron y la versión web compiló. La ejecución Android en un dispositivo queda pendiente.
+La suite cubre el formulario, los filtros, la adaptación al ancho y la sincronización entre pantallas. La ejecución Android en un dispositivo requiere comprobación.
 
-Las tareas y preferencias se conservan durante la sesión. Al reiniciar se restauran los ejemplos, el tema claro y la meta inicial.
+Para añadir un curso, abre **Tareas → Nueva tarea → Agregar curso**. Escribe un nombre y presiona **Crear curso**. El formulario selecciona el curso nuevo y lo ofrece en las próximas tareas de la sesión. Además de los cursos, la aplicación mantiene las tareas y las preferencias en memoria. Al reiniciar se restauran los ejemplos, el tema claro y la meta inicial.
 
 La documentación completa de la arquitectura, los flujos, los widgets y la demostración se encuentra en [Aula_Lista_Proyecto.md](Aula_Lista_Proyecto.md).

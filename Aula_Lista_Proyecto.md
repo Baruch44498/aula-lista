@@ -40,9 +40,9 @@ La presencia de un `StatefulWidget` permite administrar el ciclo de vida de obje
 | Pantalla | Funciones | ViewModel |
 | --- | --- | --- |
 | Inicio | Porcentaje completado, meta, tareas pendientes y accesos a Tareas y Ajustes | `HomeViewModel` |
-| Tareas | Alta de tareas, selección de curso, casillas de cumplimiento y filtros | `StudyViewModel` |
+| Tareas | Alta de tareas y cursos, selección de curso, casillas de cumplimiento y filtros | `StudyViewModel` |
 | Ajustes | Tema claro u oscuro con Switch y meta de 1 a 10 tareas con Slider | `SettingsViewModel` |
-| Formulario de nueva tarea | Nombre, curso, mensaje de validación y envío del alta | `TaskFormViewModel` |
+| Formulario de nueva tarea | Nombre, selección y alta de curso, validación y registro de la tarea | `TaskFormViewModel` |
 | Navegación común | Selección de Inicio, Tareas o Ajustes | `AppViewModel` |
 
 La navegación utiliza `NavigationBar` en anchos pequeños y `NavigationRail` desde 840 píxeles lógicos de ancho de ventana.
@@ -61,7 +61,9 @@ Los imports de componentes Material utilizan `package:material_ui/material_ui.da
 
 `StudyPreferences` representa el tema elegido y la meta de estudio. `copyWith` devuelve una nueva configuración.
 
-`StudyRepository` conserva la colección compartida de tareas. Valida el nombre, asigna identificadores y cambia el estado mediante una nueva copia del modelo.
+`Subject` representa un curso por su nombre. El catálogo comienza con Desarrollo móvil, Redes y Calidad de software.
+
+`StudyRepository` conserva las tareas y los cursos de la sesión. Valida los nombres, asigna identificadores a las tareas y cambia su estado mediante una copia del modelo.
 
 `PreferencesRepository` conserva las preferencias de la sesión y mantiene la meta entre 1 y 10 tareas.
 
@@ -112,9 +114,9 @@ La meta sigue un flujo equivalente y su cambio también se refleja en `HomeViewM
 | Ruta | Contenido |
 | --- | --- |
 | `lib/main.dart` | Composición raíz, datos iniciales y ciclo de vida |
-| `lib/models/study_task.dart` | Modelo de tareas y enumeración de cursos |
+| `lib/models/study_task.dart` | Modelos de tareas y cursos |
 | `lib/models/study_preferences.dart` | Preferencias de tema y meta |
-| `lib/repositories/study_repository.dart` | Colección compartida y operaciones de tareas |
+| `lib/repositories/study_repository.dart` | Colecciones y operaciones de tareas y cursos |
 | `lib/repositories/preferences_repository.dart` | Preferencias compartidas de la sesión |
 | `lib/viewmodels/` | ViewModels de las pantallas, navegación y formulario |
 | `lib/views/app_shell.dart` | Scaffold, AppBar y navegación adaptable |
@@ -150,6 +152,12 @@ La meta sigue un flujo equivalente y su cambio también se refleja en `HomeViewM
 | `Slider` | Selección de la meta |
 | `SingleChildScrollView` | Desplazamiento de cada pantalla |
 
+## Agregar un curso desde el formulario
+
+1. En **Tareas**, abrir **Nueva tarea** y pulsar **Agregar curso**.
+2. Escribir un nombre y pulsar **Crear curso**. El nombre admite de 1 a 40 caracteres y se compara con los cursos existentes sin distinguir mayúsculas.
+3. El `StudyRepository` incorpora el curso al catálogo. El `TaskFormViewModel` lo selecciona y el desplegable se actualiza. El curso queda disponible en futuras tareas de la sesión.
+
 ## Reglas y almacenamiento
 
 - El nombre se limpia con `trim()` y admite de 1 a 70 caracteres según la longitud de la cadena Dart.
@@ -160,7 +168,7 @@ La meta sigue un flujo equivalente y su cambio también se refleja en `HomeViewM
 - El avance de la meta utiliza la cantidad de tareas completadas de la sesión.
 - La meta admite valores enteros de 1 a 10 y su indicador visual se limita al 100 %.
 - Cambiar de pantalla conserva las tareas, el filtro y las preferencias.
-- Al reiniciar la aplicación se restauran las tareas de ejemplo, el tema claro y la meta de tres tareas.
+- Al reiniciar la aplicación se restauran las tareas y los cursos de ejemplo, el tema claro y la meta de tres tareas.
 
 Los datos se mantienen en memoria durante la sesión.
 
@@ -216,7 +224,7 @@ flutter test
 flutter build web
 ```
 
-Resultados de la ampliación con Flutter 3.50.0 y Dart 3.14.0.
+Resultados de la versión anterior al alta de cursos, con Flutter 3.50.0 y Dart 3.14.0.
 
 | Comprobación | Resultado |
 | --- | --- |
@@ -226,7 +234,7 @@ Resultados de la ampliación con Flutter 3.50.0 y Dart 3.14.0.
 | Revisión visual | Capturas de widgets en anchos de celular y escritorio y en ambos temas |
 | APK y dispositivo Android | Pendientes de comprobar con un entorno Android configurado |
 
-La suite incluye siete pruebas. Comprueba altas y validación, filtros, formulario, adaptación a dos anchos, sincronización de datos entre ViewModels y conservación del tema y la meta al navegar y redimensionar.
+La suite comprueba altas y validación, filtros, formulario, adaptación a dos anchos, sincronización entre ViewModels y conservación del tema y la meta. La ampliación añade un caso de prueba para el alta, selección y reutilización de cursos desde el formulario de tareas.
 
 La compilación APK y la ejecución en un dispositivo Android requieren comprobación con el SDK y un dispositivo configurados.
 
@@ -236,7 +244,7 @@ La compilación APK y la ejecución en un dispositivo Android requieren comproba
 2. Entrar en Tareas, seleccionar Pendientes y completar Preparar la demo de Flutter.
 3. Mostrar el avance de 67 % y volver a Inicio para comprobar la sincronización.
 4. Regresar a Tareas y abrir Nueva tarea. Guardar vacío para mostrar la validación.
-5. Crear Ensayar la exposición y comprobar el nuevo total de cuatro tareas con 50 % de progreso.
+5. Agregar el curso Base de datos, crear la tarea Diseñar tablas y comprobar el nuevo total de cuatro tareas con 50 % de progreso.
 6. Entrar en Ajustes, activar el modo oscuro y cambiar la meta con el Slider.
 7. Volver a Inicio y mostrar la nueva meta con el tema elegido.
 8. Cambiar el tamaño de la ventana y explicar NavigationBar, NavigationRail y LayoutBuilder.

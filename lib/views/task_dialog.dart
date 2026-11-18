@@ -1,11 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../models/study_task.dart';
+import '../viewmodels/study_view_model.dart';
 import '../viewmodels/task_form_view_model.dart';
 
 class TaskDialog extends StatefulWidget {
-  const TaskDialog({super.key, required this.onAdd});
-  final bool Function(String title, Subject subject) onAdd;
+  const TaskDialog({super.key, required this.viewModel});
+  final StudyViewModel viewModel;
 
   @override
   State<TaskDialog> createState() => _TaskDialogState();
@@ -13,7 +14,7 @@ class TaskDialog extends StatefulWidget {
 
 class _TaskDialogState extends State<TaskDialog> {
   final _title = TextEditingController();
-  late final _viewModel = TaskFormViewModel(onAdd: widget.onAdd);
+  late final _viewModel = TaskFormViewModel(studyViewModel: widget.viewModel);
 
   @override
   void dispose() {
@@ -26,6 +27,52 @@ class _TaskDialogState extends State<TaskDialog> {
     if (_viewModel.submit()) {
       Navigator.of(context).pop();
     }
+  }
+
+  void _showSubjectDialog() {
+    _viewModel.beginSubject();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        void saveSubject() {
+          if (_viewModel.submitSubject()) Navigator.of(dialogContext).pop();
+        }
+
+        return ListenableBuilder(
+          listenable: _viewModel,
+          builder: (context, _) => AlertDialog(
+            title: const Text('Nuevo curso'),
+            scrollable: true,
+            content: SizedBox(
+              width: 340,
+              child: TextField(
+                autofocus: true,
+                maxLength: Subject.maxLabelLength,
+                textInputAction: TextInputAction.done,
+                onChanged: _viewModel.setSubjectDraft,
+                onSubmitted: (_) => saveSubject(),
+                decoration: InputDecoration(
+                  labelText: 'Nombre del curso',
+                  hintText: 'Ej. Base de datos',
+                  errorText: _viewModel.subjectError,
+                  errorMaxLines: 2,
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: saveSubject,
+                child: const Text('Crear curso'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -78,11 +125,12 @@ class _TaskDialogState extends State<TaskDialog> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<Subject>(
+                key: ValueKey(_viewModel.subject),
                 initialValue: _viewModel.subject,
                 isExpanded: true,
                 decoration: const InputDecoration(labelText: 'Curso'),
                 items: [
-                  for (final subject in Subject.values)
+                  for (final subject in _viewModel.subjects)
                     DropdownMenuItem(
                       value: subject,
                       child: Text(subject.label),
@@ -91,6 +139,15 @@ class _TaskDialogState extends State<TaskDialog> {
                 onChanged: (value) {
                   if (value != null) _viewModel.setSubject(value);
                 },
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _showSubjectDialog,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Agregar curso'),
+                ),
               ),
             ],
           ),

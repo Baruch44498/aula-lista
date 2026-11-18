@@ -7,13 +7,31 @@ class StudyRepository extends ChangeNotifier {
     : _tasks = List.of(initial) {
     for (final task in _tasks) {
       if (task.id >= _nextId) _nextId = task.id + 1;
+      if (!_subjects.contains(task.subject)) _subjects.add(task.subject);
     }
   }
 
   final List<StudyTask> _tasks;
+  final List<Subject> _subjects = [...Subject.values];
   int _nextId = 1;
 
   List<StudyTask> get tasks => List.unmodifiable(_tasks);
+  List<Subject> get subjects => List.unmodifiable(_subjects);
+
+  Subject? addSubject(String label) {
+    final cleanLabel = label.trim();
+    if (cleanLabel.isEmpty || cleanLabel.length > Subject.maxLabelLength) {
+      return null;
+    }
+    final normalized = cleanLabel.toLowerCase();
+    if (_subjects.any((subject) => subject.label.toLowerCase() == normalized)) {
+      return null;
+    }
+    final subject = Subject(cleanLabel);
+    _subjects.add(subject);
+    notifyListeners();
+    return subject;
+  }
 
   bool addTask(String title, Subject subject) {
     final cleanTitle = title.trim();

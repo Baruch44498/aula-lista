@@ -26,6 +26,7 @@ class StudyViewModel extends ChangeNotifier {
   TaskFilter _filter = TaskFilter.all;
 
   TaskFilter get filter => _filter;
+  List<Subject> get subjects => _repository.subjects;
   int get total => _repository.tasks.length;
   int get completed => _repository.tasks.where((task) => task.done).length;
   double get progress => total == 0 ? 0 : completed / total;
@@ -54,6 +55,8 @@ class StudyViewModel extends ChangeNotifier {
     if (!added) _filter = oldFilter;
     return added;
   }
+
+  Subject? addSubject(String label) => _repository.addSubject(label);
 
   void toggleTask(int id) => _repository.toggleTask(id);
 

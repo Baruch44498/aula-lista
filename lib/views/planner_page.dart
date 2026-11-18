@@ -66,8 +66,7 @@ class PlannerPage extends StatelessWidget {
                         FilledButton.icon(
                           onPressed: () => showDialog<void>(
                             context: context,
-                            builder: (_) =>
-                                TaskDialog(onAdd: viewModel.addTask),
+                            builder: (_) => TaskDialog(viewModel: viewModel),
                           ),
                           icon: const Icon(Icons.add_rounded, size: 22),
                           label: const Text('Nueva tarea'),
