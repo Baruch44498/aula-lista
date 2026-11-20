@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+
 import '../models/study_task.dart';
+import '../viewmodels/study_view_model.dart';
+import '../viewmodels/task_form_view_model.dart';
 
 class TaskDialog extends StatefulWidget {
-  const TaskDialog({super.key, required this.onAdd});
-  final bool Function(String title, Subject subject) onAdd;
+  const TaskDialog({super.key, required this.viewModel});
+  final StudyViewModel viewModel;
 
   @override
   State<TaskDialog> createState() => _TaskDialogState();
@@ -11,97 +14,152 @@ class TaskDialog extends StatefulWidget {
 
 class _TaskDialogState extends State<TaskDialog> {
   final _title = TextEditingController();
-  Subject _subject = Subject.movil;
-  bool _invalidTitle = false;
+  late final _viewModel = TaskFormViewModel(studyViewModel: widget.viewModel);
 
   @override
   void dispose() {
     _title.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
   void _save() {
-    if (widget.onAdd(_title.text, _subject)) {
+    if (_viewModel.submit()) {
       Navigator.of(context).pop();
-    } else {
-      setState(() => _invalidTitle = true);
     }
+  }
+
+  void _showSubjectDialog() {
+    _viewModel.beginSubject();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        void saveSubject() {
+          if (_viewModel.submitSubject()) Navigator.of(dialogContext).pop();
+        }
+
+        return ListenableBuilder(
+          listenable: _viewModel,
+          builder: (context, _) => AlertDialog(
+            title: const Text('Nuevo curso'),
+            scrollable: true,
+            content: SizedBox(
+              width: 340,
+              child: TextField(
+                autofocus: true,
+                maxLength: Subject.maxLabelLength,
+                textInputAction: TextInputAction.done,
+                onChanged: _viewModel.setSubjectDraft,
+                onSubmitted: (_) => saveSubject(),
+                decoration: InputDecoration(
+                  labelText: 'Nombre del curso',
+                  hintText: 'Ej. Base de datos',
+                  errorText: _viewModel.subjectError,
+                  errorMaxLines: 2,
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: saveSubject,
+                child: const Text('Crear curso'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
-    return AlertDialog(
-      backgroundColor: colors.surface,
-      surfaceTintColor: colors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-      titlePadding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
-      actionsPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-      scrollable: true,
-      title: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: colors.primaryContainer,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.edit_note_rounded, color: colors.secondary),
-          ),
-          const SizedBox(width: 12),
-          Flexible(
-            child: Text('Nueva tarea', style: theme.textTheme.titleLarge),
-          ),
-        ],
-      ),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return ListenableBuilder(
+      listenable: _viewModel,
+      builder: (context, _) => AlertDialog(
+        backgroundColor: colors.surface,
+        surfaceTintColor: colors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        titlePadding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+        actionsPadding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+        scrollable: true,
+        title: Row(
           children: [
-            TextField(
-              controller: _title,
-              autofocus: true,
-              maxLength: 70,
-              onChanged: (_) {
-                if (_invalidTitle) setState(() => _invalidTitle = false);
-              },
-              onSubmitted: (_) => _save(),
-              decoration: InputDecoration(
-                labelText: 'Nombre de la tarea',
-                hintText: 'Ej. Ensayar la exposición',
-
-                errorText:
-                    _invalidTitle
-                        ? 'Ingresa un nombre de 1 a 70 caracteres.'
-                        : null,
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: colors.primaryContainer,
+                borderRadius: BorderRadius.circular(14),
               ),
+              child: Icon(Icons.edit_note_rounded, color: colors.secondary),
             ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<Subject>(
-              value: _subject,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'Curso'),
-              items: [
-                for (final subject in Subject.values)
-                  DropdownMenuItem(value: subject, child: Text(subject.label)),
-              ],
-              onChanged: (value) {
-                if (value != null) setState(() => _subject = value);
-              },
+            const SizedBox(width: 12),
+            Flexible(
+              child: Text('Nueva tarea', style: theme.textTheme.titleLarge),
             ),
           ],
         ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cancelar'),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _title,
+                autofocus: true,
+                maxLength: 70,
+                onChanged: _viewModel.setTitle,
+                onSubmitted: (_) => _save(),
+                decoration: InputDecoration(
+                  labelText: 'Nombre de la tarea',
+                  hintText: 'Ej. Ensayar la exposición',
+
+                  errorText: _viewModel.errorText,
+                ),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<Subject>(
+                key: ValueKey(_viewModel.subject),
+                initialValue: _viewModel.subject,
+                isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Curso'),
+                items: [
+                  for (final subject in _viewModel.subjects)
+                    DropdownMenuItem(
+                      value: subject,
+                      child: Text(subject.label),
+                    ),
+                ],
+                onChanged: (value) {
+                  if (value != null) _viewModel.setSubject(value);
+                },
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                  onPressed: _showSubjectDialog,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Agregar curso'),
+                ),
+              ),
+            ],
+          ),
         ),
-        FilledButton(onPressed: _save, child: const Text('Guardar')),
-      ],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(onPressed: _save, child: const Text('Guardar')),
+        ],
+      ),
     );
   }
 }
